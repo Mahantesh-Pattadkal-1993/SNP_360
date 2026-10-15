@@ -3,28 +3,27 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --bg: 250 250 249;
+  --fg: 28 25 23;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+.night {
+  --bg: 10 12 20;
+  --fg: 237 237 240;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  color: rgb(var(--fg));
+  background-color: rgb(var(--bg));
+  transition: background-color 300ms ease, color 300ms ease;
 }
+
+.night .dark-surface {
+  background-color: rgb(17 19 28 / 0.92) !important;
+  border-color: rgb(255 255 255 / 0.08) !important;
+  color: rgb(237 237 240);
+}
+
 
 @layer utilities {
   .text-balance {

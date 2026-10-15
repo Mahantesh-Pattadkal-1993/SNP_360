@@ -1,113 +1,114 @@
 import Image from "next/image";
+import Link from "next/link";
+import { wings } from "@/data/wings";
+import { zones } from "@/data/zones";
+import { DayNightImage } from "@/components/DayNightImage";
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
+    <div>
+      <section className="relative flex min-h-[80vh] items-center overflow-hidden">
+        <DayNightImage
+          daySrc="/images/entrance-plaza.webp"
+          nightSrc="/images/building-night-1.webp"
+          alt="Sobha Neopolis entrance plaza"
+          fill
           priority
+          sizes="100vw"
+          className="object-cover"
         />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
+        <div className="absolute inset-0 bg-black/45" />
+        <div className="relative z-10 mx-auto max-w-6xl px-4 text-white">
+          <p className="font-serif text-sm uppercase tracking-[0.2em] text-emerald-200">Panathur, East Bengaluru</p>
+          <h1 className="mt-3 max-w-2xl font-serif text-4xl font-semibold leading-tight sm:text-6xl">
+            Walk through Sobha Neopolis in 3D
+          </h1>
+          <p className="mt-4 max-w-xl text-lg text-white/85">
+            Drag to orbit, zoom in, and explore all {wings.length} residential wings across both campuses — see the
+            courtyards, lawns and pools exactly as laid out on site, by day and by night.
           </p>
-        </a>
+          <div className="mt-8 flex flex-wrap gap-4">
+            <Link
+              href="/master-plan"
+              className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-stone-900 transition-transform hover:scale-105"
+            >
+              Start the 3D Walkthrough
+            </Link>
+            <Link
+              href="/enquire"
+              className="rounded-full border border-white/60 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+            >
+              Enquire Now
+            </Link>
+          </div>
+        </div>
+      </section>
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+      <section className="mx-auto max-w-6xl px-4 py-16">
+        <div className="grid gap-10 md:grid-cols-3">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">19 Wings</p>
+            <h2 className="mt-2 font-serif text-2xl font-semibold">Two campuses, one address</h2>
+            <p className="mt-3 text-stone-600">
+              North Campus (Wing-01 to Wing-11) and South Campus (Wing-12 to Wing-19), on either side of the 18 m
+              CDP road, with courtyards and a walkway linking Wing-17 and Wing-18.
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Lawns &amp; Pools</p>
+            <h2 className="mt-2 font-serif text-2xl font-semibold">Celebration Lawn, Meandering &amp; Leisure Pools</h2>
+            <p className="mt-3 text-stone-600">
+              Landscaped courtyard lawns sit between every wing cluster, with the Meandering Pool and Leisure Pool
+              shown on the master plan.
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Day &amp; Night</p>
+            <h2 className="mt-2 font-serif text-2xl font-semibold">Toggle the whole site</h2>
+            <p className="mt-3 text-stone-600">
+              Use the sun/moon switch in the header to see building exteriors and the plaza transform from day to
+              night, on every page.
+            </p>
+          </div>
+        </div>
+      </section>
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
+      <section className="bg-stone-50 py-16 dark-surface">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="flex items-end justify-between gap-4">
+            <h2 className="font-serif text-3xl font-semibold">Amenity zones</h2>
+            <Link href="/amenities" className="text-sm font-medium text-emerald-700 hover:underline">
+              View all amenities →
+            </Link>
+          </div>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {zones.map((zone) => (
+              <div key={zone.key} className="rounded-xl border border-black/10 bg-white p-5 dark-surface">
+                <span className={`inline-block h-2.5 w-2.5 rounded-full ${zone.colorClass}`} />
+                <h3 className="mt-3 font-semibold">{zone.label}</h3>
+                <p className="mt-1 text-sm text-stone-500">{zone.amenities.length} amenities</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+      <section className="mx-auto max-w-6xl px-4 py-16">
+        <div className="flex items-end justify-between gap-4">
+          <h2 className="font-serif text-3xl font-semibold">Building gallery</h2>
+          <Link href="/wings" className="text-sm font-medium text-emerald-700 hover:underline">
+            Browse all wings →
+          </Link>
+        </div>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
+            <Image src="/images/building-day-1.webp" alt="Sobha Neopolis buildings, day view" fill className="object-cover" />
+          </div>
+          <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
+            <Image src="/images/building-night-2.jpg" alt="Sobha Neopolis buildings, night view" fill className="object-cover" />
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
