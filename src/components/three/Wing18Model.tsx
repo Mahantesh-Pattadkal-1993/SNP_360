@@ -11,24 +11,35 @@ type Mode = "day" | "night";
 //  - building entrance.jpg      → arched portal, slatted vault, rosette, glass door, lanterns, "18"
 //  - Buidings.webp              → facade rhythm on front + back: arched window column, recessed balcony
 //                                 column (staggered slabs, planters, black railings), lattice grill strip,
-//                                 outer white-framed mullioned window column; plain side faces
+//                                 outer white-framed mullioned window column with a flat black grill in
+//                                 front of it
+//  - Wing18_Side.jpeg           → the facade ends in ONE MORE COLUMN beyond the long-window column:
+//                                 stacked corbelled projecting balconies on every floor, so each flat
+//                                 reads with a second balcony beside the window (not in front of it)
 //  - real building picture.jpg  → pediment gables, corbel cornices, arched top recesses with rosettes
 // Dimensions are estimated from photo proportions, not architectural drawings (requirements.md §9).
 const FH = 3.2; // floor height
-const TOWER_W = 14;
+const TOWER_W = 18;
 const CORE_W = 4;
 const DEPTH = 20;
 const FRONT = DEPTH / 2; // tower front face (z)
 const CORE_FRONT = FRONT - 3; // core is recessed behind the tower faces
+const CORE_EDGE = CORE_W / 2;
 const BAY_W = 5; // projecting window bay beside the core
-const BAY_X = CORE_W / 2 + 0.7 + BAY_W / 2;
-const TOWER_X = CORE_W / 2 + TOWER_W / 2;
+const BAY_X = CORE_EDGE + 0.7 + BAY_W / 2;
+const TOWER_X = CORE_EDGE + TOWER_W / 2;
 const SIDE_X = TOWER_X + TOWER_W / 2; // outer side face (x)
 const LOGGIA_W = 4; // recessed balcony column
 const LOGGIA_X = BAY_X + BAY_W / 2 + 0.3 + LOGGIA_W / 2;
 const JALI_W = 0.7; // lattice grill strip
 const JALI_X = LOGGIA_X + LOGGIA_W / 2 + 0.3 + JALI_W / 2;
-const OUTER_WIN_X = (JALI_X + JALI_W / 2 + SIDE_X) / 2;
+const OUTER_WIN_X = JALI_X + JALI_W / 2 + 0.3 + 1.2; // outer white-framed mullioned window column
+// The extra column at the outer end of the facade — the balconies seen beside the long window.
+const OUTER_BAL_W = 3.2;
+const OUTER_BAL_X = SIDE_X - 0.4 - OUTER_BAL_W / 2;
+const OUTER_BAL_DEPTH = 1.2; // how far the outer balconies project from the facade
+const OUTER_BAL_RAIL_H = 1.05;
+const OUTER_BAL_FLOOR = 0.43; // balcony floor level = window sill level
 const PORTAL_HALF = 3.6;
 const ARCH_R = 2.3;
 const SPRING = 4.4;
@@ -82,6 +93,112 @@ function railingMaterial(width: number) {
     railingMaterials.set(width, material);
   }
   return material;
+}
+
+/**
+ * The extra column at the outer end of the front/back facade (Wing18_Side.jpeg).
+ *
+ * In the photo the facade runs: [jali strip] [long window with a flat black grill in front of it]
+ * [ONE MORE COLUMN: a stack of corbelled projecting balconies on every floor] — the balconies sit
+ * BESIDE the window, never in front of it, so every flat reads with a second balcony.
+ *
+ * `side` is the face-local sign: -1 = west tower, 1 = east tower (the back face is drawn with the
+ * opposite sign and a 180° rotation, which mirrors it correctly).
+ */
+function OuterBalconyColumn({
+  side,
+  floors,
+  faceSeed,
+  m,
+}: {
+  side: -1 | 1;
+  floors: number;
+  faceSeed: number;
+  m: Materials;
+}) {
+  const height = floors * FH;
+  const x = side * OUTER_BAL_X;
+  const halfW = OUTER_BAL_W / 2;
+  const railW = OUTER_BAL_W - 0.2;
+
+  return (
+    <group>
+      {/* Pilasters framing the column, so it reads as a separate bay of the facade */}
+      {[-1, 1].map((s) => (
+        <Box
+          key={s}
+          args={[0.35, height, 0.4]}
+          position={[x + s * (halfW + 0.18), height / 2, 0.2]}
+          material={m.trim}
+        />
+      ))}
+      {/* Cornice over the column */}
+      <Box args={[OUTER_BAL_W + 1.1, 0.35, 0.9]} position={[x, height - 0.2, 0.3]} material={m.trim} />
+
+      {Array.from({ length: floors }, (_, floor) => {
+        const y0 = floor * FH;
+        const lit = isLit(floor * 41 + side * 17 + faceSeed);
+        // balcony floor sits at the window-sill level, as in the photo
+        const yb = y0 + OUTER_BAL_FLOOR;
+
+        if (floor === 0) {
+          // Ground floor: a plain doorway/window, no balcony above it.
+          return (
+            <group key={floor}>
+              <FramedWindow x={x} y0={y0} z={0} width={2.2} lit={lit} m={m} />
+            </group>
+          );
+        }
+
+        return (
+          <group key={floor}>
+            {/* Door/window set back in the wall behind the balcony */}
+            <FramedWindow x={x} y0={y0} z={0} width={2.2} lit={lit} m={m} />
+
+            {/* Cantilevered balcony slab projecting from the facade */}
+            <Box
+              args={[OUTER_BAL_W, 0.22, OUTER_BAL_DEPTH]}
+              position={[x, yb - 0.11, OUTER_BAL_DEPTH / 2]}
+              material={m.slab}
+            />
+            {/* Corbels carrying the slab */}
+            {[-1, 1].map((s) => (
+              <Box
+                key={s}
+                args={[0.3, 0.5, 0.45]}
+                position={[x + s * (halfW - 0.35), yb - 0.45, 0.28]}
+                material={m.trim}
+              />
+            ))}
+            {/* Black railing along the outer edge of the slab */}
+            <Plane
+              args={[railW, OUTER_BAL_RAIL_H]}
+              position={[x, yb + OUTER_BAL_RAIL_H / 2, OUTER_BAL_DEPTH]}
+              material={railingMaterial(railW)}
+            />
+            {/* Railing returns down the two sides of the balcony */}
+            {[-1, 1].map((s) => (
+              <Plane
+                key={s}
+                args={[OUTER_BAL_DEPTH, OUTER_BAL_RAIL_H]}
+                position={[x + s * halfW, yb + OUTER_BAL_RAIL_H / 2, OUTER_BAL_DEPTH / 2]}
+                rotation={[0, (-s * Math.PI) / 2, 0]}
+                material={railingMaterial(OUTER_BAL_DEPTH)}
+              />
+            ))}
+            {/* Planter on alternate floors, as in the photo */}
+            {floor % 2 === 1 && (
+              <Box
+                args={[OUTER_BAL_W * 0.5, 0.35, 0.3]}
+                position={[x, yb + 0.18, OUTER_BAL_DEPTH - 0.2]}
+                material={m.trim}
+              />
+            )}
+          </group>
+        );
+      })}
+    </group>
+  );
 }
 
 /** Pseudo-random but stable per window, so the same flats are lit every render. */
@@ -330,7 +447,8 @@ function FramedWindow({
 /**
  * Front/back facade columns outside the arched bay (Buidings.webp), in face-local coords:
  * a recessed balcony column with staggered cantilever slabs, planters and black railings;
- * a lattice (jali) grill strip; and an outer column of white-framed windows.
+ * a lattice (jali) grill strip; and an outer column of white-framed mullioned windows with a flat
+ * black railing (grill) in front of them — no balcony in front of the window.
  */
 function FacadeColumns({ side, floors, faceSeed, m }: { side: -1 | 1; floors: number; faceSeed: number; m: Materials }) {
   const height = floors * FH;
@@ -380,8 +498,9 @@ function FacadeColumns({ side, floors, faceSeed, m }: { side: -1 | 1; floors: nu
             </mesh>
             {/* black railing across the loggia opening */}
             <Plane args={[LOGGIA_W - 0.2, RAIL_H]} position={[side * LOGGIA_X, y0 + RAIL_H / 2, -0.05]} material={railingMaterial(LOGGIA_W - 0.2)} />
-            {/* outer window column */}
+            {/* outer window column — the long window with a flat black GRILL in front of it */}
             <FramedWindow x={side * OUTER_WIN_X} y0={y0} z={0} width={2.4} lit={isLit(floor * 19 + side * 11 + faceSeed)} m={m} />
+            <Plane args={[2.7, RAIL_H]} position={[side * OUTER_WIN_X, y0 + 0.43 + RAIL_H / 2, 0.5]} material={railingMaterial(2.7)} />
           </group>
         );
       })}
@@ -599,7 +718,9 @@ export interface FlatPlacement {
 
 /** Floor `floor` (0 = ground) of the flat on `tower` (-1 west, 1 east) and `face` (1 front, -1 back). */
 export function wing18FlatPlacement(floor: number, tower: -1 | 1, face: -1 | 1): FlatPlacement {
-  const x = tower * (BAY_X + SIDE_X) / 2;
+  // a corner flat spans from the core edge to the outer end of the tower, i.e. the loggia
+  // balcony column, the long window and the new outer balcony column
+  const x = (tower * (BAY_X - BAY_W / 2 + SIDE_X)) / 2;
   return { center: [x, floor * FH + FH / 2, face * (FRONT + 0.1)], normal: face };
 }
 
@@ -665,10 +786,12 @@ export function Wing18Model({ wing, mode, highlighted = false, showLabel = false
             <group key={f.seed} position={[0, 0, f.z]} rotation={[0, f.rot, 0]}>
               <WindowBay side={f.s} floors={wing.floors} m={m} />
               <FacadeColumns side={f.s} floors={wing.floors} faceSeed={f.seed} m={m} />
+              <OuterBalconyColumn side={f.s} floors={wing.floors} faceSeed={f.seed + 3} m={m} />
               {CORNICE_FLOORS.filter((fl) => fl < wing.floors).map((fl) =>
                 [
                   [CORE_W / 2, LOGGIA_X - LOGGIA_W / 2],
-                  [LOGGIA_X + LOGGIA_W / 2, SIDE_X + 0.15],
+                  // stops short of the outer balcony column, which reads as its own bay
+                  [LOGGIA_X + LOGGIA_W / 2, OUTER_BAL_X - OUTER_BAL_W / 2 - 0.25],
                 ].map(([a, b]) => (
                   <Box
                     key={`${fl}-${a}`}
