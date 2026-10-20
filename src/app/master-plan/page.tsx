@@ -25,7 +25,8 @@ export default function MasterPlanPage() {
       <p className="mt-3 max-w-2xl text-stone-600">
         Drag to orbit, scroll to zoom, and click any wing to see its details. The North Campus (Wing-01–11) sits
         across the 18 m CDP road from the South Campus (Wing-12–19) and the lake, laid out as on the full-site
-        master plan. Switch Day/Night in the header to see it relit.
+        master plan. Pick 6 AM, 9 AM, 12 PM, 3 PM or 6 PM to see where the sun sits and the shadows it casts
+        on the March equinox; switch Day/Night in the header to see the site relit after dark.
       </p>
 
       <div className="mt-6">

@@ -1,18 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { Sky, Stars } from "@react-three/drei";
 import { wings, CDP_ROAD, PLAN_SCALE, type Wing } from "@/data/wings";
+import type { SunPosition } from "@/data/sun";
 import { Building, CourtyardLawn, Pool } from "./Building";
 import { Walkway } from "./Walkway";
 import { Wing18Model } from "./Wing18Model";
-
-interface CampusSceneProps {
-  mode: "day" | "night";
-  onSelectWing: (wing: Wing) => void;
-  highlightedWingId?: string;
-}
 
 // Site features traced from Complete-Master-Plan-Sobha-Neopolis.webp, same pixel→metre mapping as
 // the wings (origin px 360,400; PLAN_SCALE m/px). Plan is "not to scale" — proportional, not surveyed.
@@ -62,7 +57,63 @@ function Lake({ mode }: { mode: "day" | "night" }) {
   );
 }
 
-export function CampusScene({ mode, onSelectWing, highlightedWingId }: CampusSceneProps) {
+/** Site centre the sun light orbits around and its shadow camera covers. */
+const SUN_TARGET: [number, number, number] = [-20, 0, 20];
+const SUN_DISTANCE = 450;
+
+/**
+ * Directional sunlight placed along the real solar direction for the chosen time, with a shadow
+ * camera sized to the whole site. Warms and dims toward sunrise/sunset; off below the horizon.
+ */
+function Sunlight({ sun }: { sun: SunPosition }) {
+  const light = useRef<THREE.DirectionalLight>(null);
+  const [dx, dy, dz] = sun.direction;
+  const position: [number, number, number] = [
+    SUN_TARGET[0] + dx * SUN_DISTANCE,
+    SUN_TARGET[1] + dy * SUN_DISTANCE,
+    SUN_TARGET[2] + dz * SUN_DISTANCE,
+  ];
+  const up = THREE.MathUtils.clamp(sun.altitude / 25, 0, 1); // 0 at horizon, 1 above 25°
+  const color = new THREE.Color("#ff9a4d").lerp(new THREE.Color("#fff6e5"), up);
+
+  useEffect(() => {
+    const l = light.current;
+    if (!l) return;
+    l.target.position.set(...SUN_TARGET);
+    l.target.updateMatrixWorld();
+    l.shadow.needsUpdate = true;
+  });
+
+  if (sun.altitude <= 0) return null;
+  return (
+    <directionalLight
+      ref={light}
+      position={position}
+      color={color}
+      intensity={0.6 + 1.6 * up}
+      castShadow
+      shadow-mapSize={[2048, 2048]}
+      shadow-bias={-0.0004}
+      shadow-normalBias={0.6}
+      shadow-camera-left={-280}
+      shadow-camera-right={280}
+      shadow-camera-top={280}
+      shadow-camera-bottom={-280}
+      shadow-camera-near={50}
+      shadow-camera-far={1000}
+    />
+  );
+}
+
+interface CampusSceneProps {
+  mode: "day" | "night";
+  onSelectWing: (wing: Wing) => void;
+  highlightedWingId?: string;
+  /** Sun for the chosen time of day; when set (day mode) it drives sky, light and shadows. */
+  sun?: SunPosition;
+}
+
+export function CampusScene({ mode, onSelectWing, highlightedWingId, sun }: CampusSceneProps) {
   const walkways = useMemo(
     () =>
       wings
@@ -83,9 +134,17 @@ export function CampusScene({ mode, onSelectWing, highlightedWingId }: CampusSce
     <>
       {mode === "day" ? (
         <>
-          <Sky sunPosition={[80, 40, -40]} turbidity={4} rayleigh={1.5} />
-          <hemisphereLight intensity={0.6} groundColor="#4f8f52" />
-          <directionalLight position={[80, 90, -40]} intensity={1.6} castShadow shadow-mapSize={[2048, 2048]} />
+          <Sky
+            sunPosition={sun ? sun.direction : [80, 40, -40]}
+            turbidity={sun && sun.altitude < 15 ? 8 : 4}
+            rayleigh={sun && sun.altitude < 15 ? 2.5 : 1.5}
+          />
+          <hemisphereLight intensity={sun ? 0.25 + 0.35 * THREE.MathUtils.clamp(sun.altitude / 30, 0, 1) : 0.6} groundColor="#4f8f52" />
+          {sun ? (
+            <Sunlight sun={sun} />
+          ) : (
+            <directionalLight position={[80, 90, -40]} intensity={1.6} castShadow shadow-mapSize={[2048, 2048]} />
+          )}
         </>
       ) : (
         <>
