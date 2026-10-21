@@ -1,7 +1,9 @@
-// Flat numbering, from Master-Plan-Sobha-Neopolis.webp (Wing 18 legend + red series numbers on the plan).
+// Flat numbering, from Master-Plan-Sobha-Neopolis.webp (Wing 18 + Wing 19 legends and the red
+// series numbers on the plan).
 // Flat number = wing number + floor + series digit, e.g. "1801" = Wing 18, floor 0 (ground), flat 1;
-// "19184" = Wing 19, floor 18, flat 4. Wing 19 is the identical tower attached to Wing 18, so it
-// reuses the same 4-flats-per-floor layout (series labels are only printed for Wing 18).
+// "19184" = Wing 19, floor 18, flat 4. Wings 18 and 19 are the same twin-tower block, attached
+// side by side, but MIRRORED: Wing 19 is the western half of the pair, so its series read
+// East/West the opposite way round from Wing 18's.
 
 export type Series = 1 | 2 | 3 | 4;
 export type Side = -1 | 1;
@@ -28,6 +30,24 @@ export const WING18_SERIES: Record<Series, FlatSeries> = {
   4: { series: 4, label: "2841 Elite North", corner: "South-east", tower: 1, face: 1 },
 };
 
+// Wing 19 is the MIRRORED twin of Wing 18 (it is the western wing of the attached 18/19 pair,
+// Wing 18 the eastern one), so its series sit on the opposite side of the block:
+//   plan: red "3" on the north-west block and red "4" on the south-west block of the Wing-19 mass,
+//   legend: "Series 3 – 2481 Select West" (Wing 18's series 2 is the one named "Select West").
+// Series 3 & 4 therefore belong to Wing 19's WEST tower — the OUTER end of the pair, mirroring
+// Wing 18, whose 3 & 4 are on its east (also outer) tower. The two party-wall towers are plain.
+export const WING19_SERIES: Record<Series, FlatSeries> = {
+  1: { series: 1, label: "2481 Prime North", corner: "South-east", tower: 1, face: 1 },
+  2: { series: 2, label: "2481 Select East", corner: "North-east", tower: 1, face: -1 },
+  3: { series: 3, label: "2481 Select West", corner: "North-west", tower: -1, face: -1 },
+  4: { series: 4, label: "2481 Elite North", corner: "South-west", tower: -1, face: 1 },
+};
+
+/** The series map for a wing: 18 and 19 are the same twin-tower block, mirrored. */
+export function seriesFor(wingNumber: number): Record<Series, FlatSeries> {
+  return wingNumber === 19 ? WING19_SERIES : WING18_SERIES;
+}
+
 export interface FlatRef {
   code: string;
   wingNumber: number;
@@ -47,6 +67,7 @@ export function parseFlatNumber(input: string, wingNumber: number, floors: numbe
   const floor = Number(code.slice(prefix.length, -1));
   const seriesDigit = Number(code.slice(-1));
   if (floor > floors - 1) return { ok: false, error: `Floor ${floor} doesn't exist — floors run 0 to ${floors - 1}.` };
-  if (!(seriesDigit in WING18_SERIES)) return { ok: false, error: "The last digit is the flat (1–4) on that floor." };
-  return { ok: true, flat: { code, wingNumber, floor, series: WING18_SERIES[seriesDigit as Series] } };
+  const seriesMap = seriesFor(wingNumber);
+  if (!(seriesDigit in seriesMap)) return { ok: false, error: "The last digit is the flat (1–4) on that floor." };
+  return { ok: true, flat: { code, wingNumber, floor, series: seriesMap[seriesDigit as Series] } };
 }

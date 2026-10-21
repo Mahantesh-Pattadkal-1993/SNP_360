@@ -82,12 +82,13 @@ export function WingDetailViewer({ wingId }: { wingId: string }) {
             <p className="mt-2 text-sm text-stone-600">
               Flat <strong>{flat.code}</strong> · {flat.floor === 0 ? "Ground floor" : `Floor ${flat.floor}`} · Series{" "}
               {flat.series.series}
-              {wing.number === 18 ? ` – ${flat.series.label}` : ""} · {flat.series.corner} corner
+              {` – ${flat.series.label}`} · {flat.series.corner} corner
             </p>
           )}
           <p className="mt-2 text-xs text-stone-400">
             Format: wing + floor + flat, e.g. {wing.number}01 = Wing {wing.number}, ground floor, flat 1;{" "}
-            {wing.number}184 = floor 18, flat 4. Floors 0–18, flats 1–4 per floor (Wing 18 legend, master plan).
+            {wing.number}184 = floor 18, flat 4. Floors 0–18, flats 1–4 per floor (Wing 18/19 legends,
+            master plan).
           </p>
         </div>
       )}

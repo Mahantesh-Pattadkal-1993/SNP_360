@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import * as THREE from "three";
 import { Html } from "@react-three/drei";
 import type { Wing } from "@/data/wings";
+import { seriesFor } from "@/data/flats";
 
 type Mode = "day" | "night";
 
@@ -17,6 +18,14 @@ type Mode = "day" | "night";
 //                                 stacked corbelled projecting balconies on every floor, so each flat
 //                                 reads with a second balcony beside the window (not in front of it)
 //  - real building picture.jpg  → pediment gables, corbel cornices, arched top recesses with rosettes
+//  - wing 18 backside distant view.jpeg → the BACK (north) face: a WIDE pediment gable over the
+//                                 series 3 flats, and the other tower ending in a plain flat
+//                                 parapet (no gable) — so the pediment is not on every tower.
+// Per the master plan numbering, series 3 (2481 Grande East) and series 4 (2841 Elite North)
+// are the east tower's flats, so the pediment belongs to the east tower only — and the same
+// wide gable caps both of that tower's faces (series 3 at the back, series 4 at the front).
+// Wing 19 is the attached MIRRORED twin: its series 3 & 4 are on its WEST tower, so it gets the
+// same wide gable on its west tower — the outer end of the pair, mirroring Wing 18.
 // Dimensions are estimated from photo proportions, not architectural drawings (requirements.md §9).
 const FH = 3.2; // floor height
 const TOWER_W = 18;
@@ -48,6 +57,21 @@ const PORTAL_FLOOR = 0.6;
 const RAIL_H = 1.05;
 const SIDES = [-1, 1] as const;
 const CORNICE_FLOORS = [3, 8, 13];
+// The pediment gable that crowns the Wing 18 series 3 & 4 tower — a WIDE gable over the
+// loggia, jali and outer-window bays ("wing 18 backside distant view.jpeg"). It stops at the
+// inner edge of the outer balcony column, which reads as its own bay, and the other tower
+// of the wing ends in a plain flat parapet, with no gable at all.
+const PEDIMENT_X0 = CORE_EDGE; // starts at the core slot
+const PEDIMENT_X1 = OUTER_BAL_X - OUTER_BAL_W / 2; // stops before the outer balcony column
+const PEDIMENT_W = PEDIMENT_X1 - PEDIMENT_X0;
+const PEDIMENT_CX = (PEDIMENT_X0 + PEDIMENT_X1) / 2;
+const PEDIMENT_H = 3; // gable height above the cornice (≈1 floor, per the back photo)
+const PEDIMENT_DENTILS = 16; // small blocks along the cornice under the gable
+// The tower that carries the series 3 & 4 flats — the only tower with a pediment.
+// This is wing-dependent: the 18/19 pair is mirrored, so Wing 18's series 3 & 4 are on its east
+// tower and Wing 19's are on its west tower (the outer end of the pair in both cases).
+// Derived from the series map rather than hard-coded, so it follows the data.
+const pedimentSide = (wingNumber: number): -1 | 1 => seriesFor(wingNumber)[3].tower;
 
 // ---------- canvas textures (no network fonts/assets needed) ----------
 
@@ -540,35 +564,99 @@ function TowerBody({ side, floors, m }: { side: -1 | 1; floors: number; m: Mater
   );
 }
 
-/** Pediment gable with corbelled cornice over each window bay, plus the roof parapet. */
-function Roof({ side, floors, m }: { side: -1 | 1; floors: number; m: Materials }) {
-  const height = floors * FH;
-  const x = side * BAY_X;
+/**
+ * The wide pediment gable that crowns the Wing 18 series 3 & 4 tower.
+ *
+ * It spans the loggia, jali and outer-window bays — from the core edge out to just short of
+ * the outer balcony column, which reads as its own bay ("wing 18 backside distant view.jpeg").
+ * The same gable caps both faces of that tower: series 3 on the back (north) face and series 4
+ * on the front (courtyard) face.
+ *
+ * `face` is the outward direction of the face: +1 = front (+z), -1 = back (-z).
+ */
+function Pediment({
+  side,
+  face,
+  height,
+  m,
+}: {
+  side: -1 | 1;
+  face: 1 | -1;
+  height: number;
+  m: Materials;
+}) {
   const gable = useMemo(() => {
     const s = new THREE.Shape();
-    s.moveTo(-(BAY_W + 0.8) / 2, 0);
-    s.lineTo((BAY_W + 0.8) / 2, 0);
-    s.lineTo(0, 2.4);
+    s.moveTo(-PEDIMENT_W / 2, 0);
+    s.lineTo(PEDIMENT_W / 2, 0);
+    s.lineTo(0, PEDIMENT_H);
     s.closePath();
     return new THREE.ExtrudeGeometry(s, { depth: 1.4, bevelEnabled: false });
   }, []);
+
+  const x = side * PEDIMENT_CX;
+  return (
+    <group>
+      {/* parapet mass the gable sits on */}
+      <Box args={[PEDIMENT_W, 1.5, 8]} position={[x, height + 0.75, face * (FRONT - 4)]} material={m.stucco} />
+      {/* cornice and its dentil course */}
+      <Box args={[PEDIMENT_W + 0.8, 0.35, 1.6]} position={[x, height + 1.35, face * (FRONT - 0.2)]} material={m.trim} />
+      {Array.from({ length: PEDIMENT_DENTILS }, (_, i) => (
+        <Box
+          key={i}
+          args={[0.25, 0.35, 0.3]}
+          position={[
+            side * (PEDIMENT_X0 + 0.6 + i * ((PEDIMENT_W - 1.2) / (PEDIMENT_DENTILS - 1))),
+            height + 1.0,
+            face * (FRONT + 0.55),
+          ]}
+          material={m.trim}
+          shadow={false}
+        />
+      ))}
+      <mesh
+        position={[x, height + 1.52, face * (FRONT - 0.9)]}
+        rotation={[0, face === 1 ? 0 : Math.PI, 0]}
+        geometry={gable}
+        material={m.trim}
+        castShadow
+      />
+    </group>
+  );
+}
+
+/**
+ * Roof parapet, plus the pediment gable.
+ *
+ * The gable belongs to the tower that holds the Wing 18 series 3 & 4 flats: the east tower of
+ * Wing 18 (master plan: the red "3" and "4" sit on Wing 18's eastern block). The same wide
+ * gable caps both of that tower's faces (series 3 on the back, series 4 on the front); the other
+ * tower of the wing ends in a plain flat parapet with no gable at all.
+ */
+function Roof({
+  side,
+  floors,
+  pediment,
+  m,
+}: {
+  side: -1 | 1;
+  floors: number;
+  /** This tower carries the series 3 & 4 flats, so it gets the pediment. */
+  pediment: boolean;
+  m: Materials;
+}) {
+  const height = floors * FH;
 
   return (
     <group>
       <Box args={[TOWER_W + 0.4, 0.3, DEPTH + 0.4]} position={[side * TOWER_X, height, 0]} material={m.trim} />
       <Box args={[TOWER_W, 0.9, DEPTH]} position={[side * TOWER_X, height + 0.6, 0]} material={m.stucco} />
-      <Box args={[BAY_W, 1.5, 8]} position={[x, height + 0.75, FRONT - 4]} material={m.stucco} />
-      <Box args={[BAY_W + 1.2, 0.35, 1.6]} position={[x, height + 1.35, FRONT - 0.2]} material={m.trim} />
-      {Array.from({ length: 6 }, (_, i) => (
-        <Box
-          key={i}
-          args={[0.2, 0.35, 0.3]}
-          position={[x + (i - 2.5) * 0.9, height + 1.0, FRONT + 0.55]}
-          material={m.trim}
-          shadow={false}
-        />
-      ))}
-      <mesh position={[x, height + 1.52, FRONT - 0.9]} geometry={gable} material={m.trim} castShadow />
+      {pediment && (
+        <>
+          <Pediment side={side} face={-1} height={height} m={m} />
+          <Pediment side={side} face={1} height={height} m={m} />
+        </>
+      )}
     </group>
   );
 }
@@ -803,7 +891,7 @@ export function Wing18Model({ wing, mode, highlighted = false, showLabel = false
               )}
             </group>
           ))}
-          <Roof side={side} floors={wing.floors} m={m} />
+          <Roof side={side} floors={wing.floors} pediment={side === pedimentSide(wing.number)} m={m} />
           {night && (
             <pointLight position={[side * BAY_X, 0.8, FRONT + 2]} intensity={60} distance={32} decay={1.2} color="#ffc27a" />
           )}
