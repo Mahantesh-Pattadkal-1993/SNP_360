@@ -236,7 +236,7 @@ other — every z-offset is `face * (FRONT - n)`.
 | `entrance-plaza.webp` | Plaza approach |
 | `Wing18_Side.jpeg` | The **outer** projecting-balcony column (stacked corbelled balconies) |
 | `wing 18 backside distant view.jpeg` | **The pediment** — back (north) face, wide gable on the east tower, plain parapet on the west |
-| `wing18-19 backside.jpeg` | Backside garden / rear approach of the 18-19 pair |
+| `wing18-19 backside.jpeg` | Backside garden behind the 18/19 pair — **the seating arrangement** (raised circular planter with a concrete seat-ring, stone plaza, curvy brick path, lamp posts) and the **walking track** |
 | `gate to south campus.jpeg` | South campus gate |
 | `Master-Plan-Sobha-Neopolis-with-numbering.webp` | **Numbered master plan (1056×790)** — red series numbers per wing |
 | `masterplan-full.webp`, `masterplan-north.png`, `masterplan-south.png` | Site plan + campus sheets |
@@ -248,13 +248,76 @@ other — every z-offset is `face * (FRONT - n)`.
 
 ---
 
-## 6. Adding a new Wing 18 detail — workflow
+## 6. The landscape strip behind the 18/19 pair (spots 26, 23, 12)
+
+North of the Wing 18 / Wing 19 row — i.e. **behind** the wings, not in the
+courtyard — the master plan shows a landscaped strip. Three numbered badges
+sit on it, and `wing18-19 backside.jpeg` photographs it.
+
+| Spot | What it is | Where it sits |
+|---|---|---|
+| **26** | Seating area | directly behind **Wing 19** |
+| **23** | Curvy walking track | behind **Wing 18** |
+| **12** | Basketball court | past Wing 18's east end, in its own compound |
+
+Modelled in `src/components/three/Amenities.tsx` (`SeatingArea`,
+`WalkingTrack`, `BasketballCourt`), wired up in `CampusScene.tsx`.
+
+### The placement trap
+
+**The plan's row is drawn at ~22° to the axes, so the badges must NOT be
+mapped through `p()` directly** — that lands them *inside* the buildings,
+because the scene's wings are axis-aligned while the plan row is tilted.
+
+Instead, measure in the row's own frame and then map onto the scene:
+
+1. Fit the building mass's **north edge** line → its slope gives the row
+   direction (21.85° here) and the "behind" normal.
+2. Project each badge onto that frame → *along the row* and *north of the
+   edge*.
+3. Re-express against the scene's own anchors: Wing 19 at x −40, Wing 18 at
+   x −8, both z 108, so the **north facade is z = 98**.
+4. Place the amenity ~15–17 m north of that facade (the "8 M WIDE DRIVEWAY"
+   strip), and the court ~34 m north in its own compound.
+
+Resulting scene coordinates (`CampusScene.tsx`):
+
+```ts
+const SEATING_AREA      = [-38, 84];          // behind Wing 19
+const WALKING_TRACK     = [[-24,88], [-11,83], [2,86], [12,80]];  // behind Wing 18
+const BASKETBALL_COURT  = [10, 66];           // NE compound
+```
+
+> Only the **order and relative position** come from the plan — it is
+> "not to scale". Sizes are **real-world**: a basketball court is 28 × 15 m,
+> the track 3.2 m wide, the plaza ~17 m across.
+
+### What the backside photo adds
+
+`wing18-19 backside.jpeg` supplies the *appearance*, which the plan cannot:
+a raised circular planter ringed by a low concrete wall that doubles as
+seating, a stone plaza, a curvy brick path with stone edging, lawn beds, and
+black lamp posts with curled arms. It also confirms the **fence line** at the
+property edge and the sports court beyond it.
+
+### Which plan image?
+
+Use **`masterplan-full.webp`** (1100×815) for site geometry — it is the
+image the scene's `p()` mapping refers to. The numbered
+`Master-Plan-Sobha-Neopolis-with-numbering.webp` is a *different, larger
+scale* rendering of the same site: the same badges sit at completely
+different pixel coordinates, so **do not mix the two**. (Wing 18's own
+series numbers *were* read off the numbered plan — see §3.)
+
+---
+
+## 7. Adding a new Wing 18 detail — workflow
 
 1. **Work out where it goes.** Which tower (west/east) and which face
    (front/back)? Use the series map in §3 — don't guess from a photo alone.
 2. **Find the evidence.** Back-view photos are mirrored (§1). A photo proves
    *what it looks like*; the master plan proves *where it is*.
-3. **Measure rather than eyeball** (§7) and express the result in the
+3. **Measure rather than eyeball** (§8) and express the result in the
    model's own constants (`BAY_X`, `LOGGIA_X`, `OUTER_BAL_X`, …) so the
    feature stays tied to the facade layout instead of drifting.
 4. **Respect the outer balcony column.** It reads as a separate bay; most
@@ -269,12 +332,12 @@ other — every z-offset is `face * (FRONT - n)`.
 
 ---
 
-## 7. Measurement techniques (what actually worked)
+## 8. Measurement techniques (what actually worked)
 
 **Zoom into a photo region** — `sharp` is already a dependency:
 
 ```js
-// Prefer a script file over `node -e`, see §8
+// Prefer a script file over `node -e`, see §9
 sharp('public/images/wing 18 backside distant view.jpeg')
   .extract({ left: 240, top: 190, width: 400, height: 150 })
   .resize({ width: 1600 })
@@ -305,7 +368,7 @@ local minima, to convert photo pixels → metres via the known floor height.
 
 ---
 
-## 8. Gotchas
+## 9. Gotchas
 
 * **Bash history expansion breaks `node -e` scripts** containing `!`
   (e.g. `!sky` → `event not found`). Write the script to a file and run
@@ -321,7 +384,7 @@ local minima, to convert photo pixels → metres via the known floor height.
 
 ---
 
-## 9. Open items / known gaps
+## 10. Open items / known gaps
 
 * **Wing 19 shares this model component** but is the **mirrored** twin of
   Wing 18. It now has its own series map (`WING19_SERIES`), resolved through
@@ -333,6 +396,10 @@ local minima, to convert photo pixels → metres via the known floor height.
   therefore overlap in plan. Worth reconciling.
 * `WING_WIDTH` / `WING_DEPTH` in `wings.ts` are placeholders (16 × 34) and
   are only used for generic-wing massing, not the Wing 18 model.
+* **The amenity strip (spots 26 / 23 / 12) is placed from the plan's
+  order and relative offsets, not surveyed coordinates** — see §6. The
+  "8 M WIDE DRIVEWAY" strip between the buildings and the garden is not
+  modelled, and the property-edge fence is only implied by the court.
 * All dimensions are **estimated from photo proportions, not architectural
   drawings** (`requirements.md` §9). No surveyed footprint/GPS data yet.
 * `WING18_SERIES[4].label` is `"2841 Elite North"` while the plan legend

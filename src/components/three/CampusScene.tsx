@@ -8,6 +8,7 @@ import type { SunPosition } from "@/data/sun";
 import { Building, CourtyardLawn, Pool } from "./Building";
 import { Walkway } from "./Walkway";
 import { Wing18Model } from "./Wing18Model";
+import { SeatingArea, WalkingTrack, BasketballCourt } from "./Amenities";
 
 // Site features traced from Complete-Master-Plan-Sobha-Neopolis.webp, same pixel→metre mapping as
 // the wings (origin px 360,400; PLAN_SCALE m/px). Plan is "not to scale" — proportional, not surveyed.
@@ -34,6 +35,33 @@ const POOL_SPOTS: [number, number][] = [
   p(265, 415), // Leisure Pool by Club Syros
   p(665, 205), // Meandering Pool, clubhouse
 ];
+
+// The strip of landscape behind the Wing 18 / Wing 19 pair (the north side of the
+// South Campus row), read off the master plan badges 26, 23 and 12:
+//   26 – seating area, directly behind Wing 19
+//   23 – curvy walking track, directly behind Wing 18
+//   12 – basketball court, at the east end of the row
+//
+// The plan's row is drawn at ~22° to the axes, so the badges are NOT mapped through
+// p() directly — that would skew them into the buildings. Instead they are measured in
+// the row's own frame (along the building row / north of its north edge) and then mapped
+// onto the scene's axis-aligned wings:
+//   • along the row: badge 26 sits over Wing 19, 23 over Wing 18, 12 just past
+//     Wing 18's east end;
+//   • behind the row: 26 and 23 are ~15–17 m north of the north facade (the
+//     "8 M WIDE DRIVEWAY" strip), and the court is further north still (~34 m),
+//     in its own hardstanding compound at the north-east corner.
+// Wings 18/19 sit at x -40 / -8, z 108, so their north facade is z = 98.
+const SEATING_AREA: [number, number] = [-38, 84];
+const WALKING_TRACK: [number, number][] = [
+  [-24, 88],
+  [-11, 83],
+  [2, 86],
+  [12, 80],
+];
+const BASKETBALL_COURT: [number, number] = [10, 66];
+// The court sits on pale hardstanding, not lawn (as on the plan).
+const COURT_GROUND = { center: [10, 66] as [number, number], size: [30, 18] as [number, number] };
 
 function Ground({ center, size, color, y }: { center: [number, number]; size: [number, number]; color: string; y: number }) {
   return (
@@ -180,6 +208,12 @@ export function CampusScene({ mode, onSelectWing, highlightedWingId, sun }: Camp
       {POOL_SPOTS.map((spot, i) => (
         <Pool key={`pool-${i}`} position={spot} size={14} />
       ))}
+
+      {/* landscape strip behind the Wing 18 / Wing 19 pair */}
+      <Ground center={COURT_GROUND.center} size={COURT_GROUND.size} y={0.04} color={mode === 'day' ? '#cfc4a8' : '#1b1d20'} />
+      <SeatingArea position={SEATING_AREA} mode={mode} />
+      <WalkingTrack points={WALKING_TRACK} mode={mode} />
+      <BasketballCourt position={BASKETBALL_COURT} mode={mode} />
       {walkways.map((w, i) => (
         <Walkway key={`walkway-${i}`} from={w.from} to={w.to} />
       ))}
