@@ -237,7 +237,7 @@ other — every z-offset is `face * (FRONT - n)`.
 | `Wing18_Side.jpeg` | The **outer** projecting-balcony column (stacked corbelled balconies) |
 | `wing 18 backside distant view.jpeg` | **The pediment** — back (north) face, wide gable on the east tower, plain parapet on the west |
 | `wing18-19 backside.jpeg` | Backside garden behind the 18/19 pair — **the seating arrangement** (raised circular planter with a concrete seat-ring, stone plaza, curvy brick path, lamp posts) and the **walking track** |
-| `gate to south campus.jpeg` | South campus gate |
+| `gate to south campus.jpeg` | **The south campus gate** — classical cream portico: entablature with a fluted-pilaster frieze, coffered soffit, round Tuscan columns, black wrought-iron gates, curled-arm lamp post |
 | `Master-Plan-Sobha-Neopolis-with-numbering.webp` | **Numbered master plan (1056×790)** — red series numbers per wing |
 | `masterplan-full.webp`, `masterplan-north.png`, `masterplan-south.png` | Site plan + campus sheets |
 

@@ -9,6 +9,7 @@ import { Building, CourtyardLawn, Pool } from "./Building";
 import { Walkway } from "./Walkway";
 import { Wing18Model } from "./Wing18Model";
 import { SeatingArea, WalkingTrack, BasketballCourt } from "./Amenities";
+import { SouthCampusGate } from "./CampusGate";
 
 // Site features traced from Complete-Master-Plan-Sobha-Neopolis.webp, same pixel→metre mapping as
 // the wings (origin px 360,400; PLAN_SCALE m/px). Plan is "not to scale" — proportional, not surveyed.
@@ -62,6 +63,18 @@ const WALKING_TRACK: [number, number][] = [
 const BASKETBALL_COURT: [number, number] = [10, 66];
 // The court sits on pale hardstanding, not lawn (as on the plan).
 const COURT_GROUND = { center: [10, 66] as [number, number], size: [30, 18] as [number, number] };
+
+// The south campus entrance gate — master plan spot **01**, the "gate to south campus"
+// photo. On the plan it is drawn as an ENTRY and an EXIT gate side by side, separated
+// by a small planted island, at the T-junction where the campus driveway meets the
+// CDP road. Measured in masterplan-full.webp px: the badge sits at (298, 324); the CDP
+// road runs E-W at world z -64.8..-51.6 and the campus driveway N-S at world x -43.8..-28.8.
+// So the pair straddles the driveway, on the road, facing south into the campus.
+const SOUTH_CAMPUS_GATE: [number, number] = [-36, -52];
+// The campus driveway running south from the gate into the South Campus (8 m wide on
+// the plan), so the gate reads as an entrance rather than a free-standing structure.
+const CAMPUS_DRIVE = { center: [-38, -30] as [number, number], size: [9, 46] as [number, number] };
+const SOUTH_CAMPUS_GATE_ROTATION = 0;
 
 function Ground({ center, size, color, y }: { center: [number, number]; size: [number, number]; color: string; y: number }) {
   return (
@@ -211,6 +224,8 @@ export function CampusScene({ mode, onSelectWing, highlightedWingId, sun }: Camp
 
       {/* landscape strip behind the Wing 18 / Wing 19 pair */}
       <Ground center={COURT_GROUND.center} size={COURT_GROUND.size} y={0.04} color={mode === 'day' ? '#cfc4a8' : '#1b1d20'} />
+      <Ground center={CAMPUS_DRIVE.center} size={CAMPUS_DRIVE.size} y={0.045} color={mode === "day" ? "#8e8e8a" : "#2a2a2e"} />
+      <SouthCampusGate position={SOUTH_CAMPUS_GATE} rotation={SOUTH_CAMPUS_GATE_ROTATION} mode={mode} />
       <SeatingArea position={SEATING_AREA} mode={mode} />
       <WalkingTrack points={WALKING_TRACK} mode={mode} />
       <BasketballCourt position={BASKETBALL_COURT} mode={mode} />
