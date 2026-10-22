@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { Html } from "@react-three/drei";
 import type { Wing } from "@/data/wings";
 import { seriesFor } from "@/data/flats";
+import { GRASS } from "./palette";
 
 type Mode = "day" | "night";
 
@@ -362,7 +363,7 @@ function useMaterials(mode: Mode, highlighted: boolean, floors: number): Materia
       whitePot: new THREE.MeshStandardMaterial({ color: "#f1ede4", roughness: 0.7 }),
       clayPot: new THREE.MeshStandardMaterial({ color: "#7a3f22", roughness: 0.9 }),
       paving: new THREE.MeshStandardMaterial({ color: "#cfc6b4", roughness: 1 }),
-      lawn: new THREE.MeshStandardMaterial({ color: "#5f8f45", roughness: 1 }),
+      lawn: new THREE.MeshStandardMaterial({ color: GRASS, roughness: 1 }),
     };
   }, [mode, highlighted, floors]);
 }

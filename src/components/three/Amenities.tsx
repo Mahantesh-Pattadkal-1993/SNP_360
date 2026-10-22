@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import * as THREE from "three";
+import { GRASS, GRASS_DARK } from "./palette";
 
 type Mode = "day" | "night";
 
@@ -99,7 +100,7 @@ export function SeatingArea({ position, mode }: { position: [number, number]; mo
       {/* curved lawn bed at the plaza edge */}
       <mesh position={[-5.6, 0.07, 3.4]} rotation={[-Math.PI / 2, 0, 0.5]} receiveShadow>
         <ringGeometry args={[2.6, 5.2, 24, 1, 0.6, 3.2]} />
-        <meshStandardMaterial color="#4f8f52" roughness={1} />
+        <meshStandardMaterial color={GRASS} roughness={1} />
       </mesh>
       {/* raised planter: soil, planting, and the concrete seat ring around it */}
       <mesh position={[0, 0.42, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -109,13 +110,13 @@ export function SeatingArea({ position, mode }: { position: [number, number]; mo
       {shrubs.map((s, i) => (
         <mesh key={i} position={[s.x, 0.42 + s.s * 0.6, s.z]} castShadow>
           <coneGeometry args={[s.s * 0.45, s.s * 1.3, 7]} />
-          <meshStandardMaterial color="#3f7a48" roughness={0.95} />
+          <meshStandardMaterial color={GRASS_DARK} roughness={0.95} />
         </mesh>
       ))}
       {/* a spiky plant in the middle, as in the photo */}
       <mesh position={[0, 1.05, 0]} castShadow>
         <coneGeometry args={[0.85, 1.9, 9]} />
-        <meshStandardMaterial color="#3c6b40" roughness={0.95} />
+        <meshStandardMaterial color={GRASS_DARK} roughness={0.95} />
       </mesh>
       <mesh position={[0, 0.26, 0]} castShadow receiveShadow>
         <cylinderGeometry args={[3.15, 3.25, 0.52, 32, 1, true]} />
@@ -204,10 +205,10 @@ export function BasketballCourt({ position, mode }: { position: [number, number]
   ]);
   return (
     <group position={[x, 0, z]}>
-      {/* apron */}
+      {/* apron — hardstanding around the court, deliberately not green so it never reads as grass */}
       <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[W + 7, D + 7]} />
-        <meshStandardMaterial color="#6f8f6a" roughness={1} />
+        <meshStandardMaterial color="#b7b8b1" roughness={1} />
       </mesh>
       {/* playing surface */}
       <mesh position={[0, 0.07, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>

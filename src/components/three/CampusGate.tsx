@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import * as THREE from "three";
+import { GRASS, GRASS_DARK } from "./palette";
 
 type Mode = "day" | "night";
 
@@ -230,11 +231,11 @@ export function SouthCampusGate({
       {/* planted island between the two lanes */}
       <mesh position={[0, 0.09, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <circleGeometry args={[(gap - width) / 2, 24]} />
-        <meshStandardMaterial color="#4f8f52" roughness={1} />
+        <meshStandardMaterial color={GRASS} roughness={1} />
       </mesh>
       <mesh position={[0, 0.5, 0]} castShadow>
         <coneGeometry args={[(gap - width) / 4.5, 0.9, 8]} />
-        <meshStandardMaterial color="#3f7a48" roughness={0.95} />
+        <meshStandardMaterial color={GRASS_DARK} roughness={0.95} />
       </mesh>
     </group>
   );

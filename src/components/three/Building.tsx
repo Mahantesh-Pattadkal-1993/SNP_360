@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import * as THREE from "three";
 import { Html } from "@react-three/drei";
 import { WING_WIDTH, WING_DEPTH, type Wing } from "@/data/wings";
+import { GRASS } from "./palette";
 
 interface BuildingProps {
   wing: Wing;
@@ -234,7 +235,7 @@ export function CourtyardLawn({ position, size = 24 }: { position: [number, numb
   return (
     <mesh position={[x, 0.05, z]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
       <circleGeometry args={[size, 32]} />
-      <meshStandardMaterial color="#4f8f52" roughness={1} />
+      <meshStandardMaterial color={GRASS} roughness={1} />
     </mesh>
   );
 }

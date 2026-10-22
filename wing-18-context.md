@@ -309,6 +309,26 @@ scale* rendering of the same site: the same badges sit at completely
 different pixel coordinates, so **do not mix the two**. (Wing 18's own
 series numbers *were* read off the numbered plan — see §3.)
 
+### Ground cover: the floor is grey, the grass is green
+
+The site ground is split into two layers, and they must stay that way:
+
+* **The floor** (the ground the buildings stand on) is a **neutral light grey**,
+  `FLOOR_DAY = #ced0cb` in `src/components/three/palette.ts`, with the land
+  outside the campus a shade lighter (`FLOOR_OUT_DAY = #dcdcd6`).
+* **Grass** (`GRASS = #4f8f52`) is a *thin layer laid on top* of that floor at
+  `y = 0.04` — the lawns, lawn beds, hedges and planting.
+
+The floor used to be green (`#9fbf7a`), which made grass impossible to read:
+green on green. Anything planted must now use the `GRASS` / `GRASS_DARK`
+constants from `palette.ts` so it stands out against the grey, and any new
+grass patch should be added as a `Ground` (or a `GRASS_AREAS` entry in
+`CampusScene.tsx`) at `y = 0.04` rather than by re-colouring the floor.
+
+The hemisphere light's `groundColor` was changed to a neutral `#b9bab6` at the
+same time — a green bounce light on a grey floor tints the whole scene.
+
+
 ---
 
 ## 7. Adding a new Wing 18 detail — workflow

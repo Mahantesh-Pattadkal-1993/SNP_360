@@ -9,6 +9,7 @@ import type { Wing } from "@/data/wings";
 import type { FlatRef } from "@/data/flats";
 import { Building } from "./Building";
 import { Wing18Model, wing18FlatPlacement } from "./Wing18Model";
+import { FLOOR_OUT_DAY, FLOOR_OUT_NIGHT } from "./palette";
 
 interface WingViewerProps {
   wing: Wing;
@@ -88,7 +89,7 @@ export function WingViewer({ wing, mode, flat, flyToken = 0, className }: WingVi
           {mode === "day" ? (
             <>
               <color attach="background" args={["#bfe3f5"]} />
-              <hemisphereLight intensity={0.7} groundColor="#4f8f52" />
+              <hemisphereLight intensity={0.7} groundColor="#b9bab6" />
               <directionalLight position={[x + 60, height + 60, z + 60]} intensity={1.6} castShadow />
               <directionalLight position={[x - 40, height + 40, z - 80]} intensity={0.7} />
             </>
@@ -102,7 +103,7 @@ export function WingViewer({ wing, mode, flat, flyToken = 0, className }: WingVi
           )}
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[x, 0, z]} receiveShadow>
             <planeGeometry args={[160, 160]} />
-            <meshStandardMaterial color={mode === "day" ? "#d8d2c0" : "#11131f"} roughness={1} />
+            <meshStandardMaterial color={mode === "day" ? FLOOR_OUT_DAY : FLOOR_OUT_NIGHT} roughness={1} />
           </mesh>
           {wing.detailedModel ? (
             <Wing18Model wing={wing} mode={mode} highlightFlat={flat && placement ? { code: flat.code, placement } : undefined} />

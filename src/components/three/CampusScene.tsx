@@ -10,6 +10,7 @@ import { Walkway } from "./Walkway";
 import { Wing18Model } from "./Wing18Model";
 import { SeatingArea, WalkingTrack, BasketballCourt } from "./Amenities";
 import { SouthCampusGate } from "./CampusGate";
+import { FLOOR_DAY, FLOOR_NIGHT, FLOOR_OUT_DAY, FLOOR_OUT_NIGHT, GRASS, GRASS_NIGHT } from "./palette";
 
 // Site features traced from Complete-Master-Plan-Sobha-Neopolis.webp, same pixel→metre mapping as
 // the wings (origin px 360,400; PLAN_SCALE m/px). Plan is "not to scale" — proportional, not surveyed.
@@ -19,6 +20,12 @@ const rect = (x0: number, y0: number, x1: number, y1: number) => {
   const [bx, bz] = p(x1, y1);
   return { center: [(ax + bx) / 2, (az + bz) / 2] as [number, number], size: [bx - ax, bz - az] as [number, number] };
 };
+
+// The ground the campus sits on. It is deliberately a neutral light GREY rather than green:
+// a green floor swallows every green landscape element (lawns, lawn beds, planting), so
+// grass and shrubs would be impossible to pick out. On this neutral floor the green
+// landscape reads clearly as grass cover sitting on top of the paving.
+// See palette.ts for the shared colours.
 
 const NORTH_PLOT = rect(120, 30, 600, 275);
 const SOUTH_PLOT_WEST = rect(100, 400, 230, 760);
@@ -63,6 +70,26 @@ const WALKING_TRACK: [number, number][] = [
 const BASKETBALL_COURT: [number, number] = [10, 66];
 // The court sits on pale hardstanding, not lawn (as on the plan).
 const COURT_GROUND = { center: [10, 66] as [number, number], size: [30, 18] as [number, number] };
+
+// Grass cover laid on the campus floor. The floor itself is a neutral grey (see palette.ts),
+// so these green areas are what read as "grass" — they sit on top of the floor as a thin
+// layer at y = 0.04, just above it. They follow the landscaped areas of the master plan:
+//   • the green spine of the North Campus, between the Wing 08–11 row and the Wing 01–04
+//     row, around the Olympus Plaza roundabout (badge 16);
+//   • the tree-lined green edge down the west side of the North Campus;
+//   • the lawn between the Wing 18 / 19 north facade (z = 98) and the walking track;
+//   • the central courtyard of the South Campus, between the Wing 18/19 and Wing 16/17 rows.
+const GRASS_AREAS: { center: [number, number]; size: [number, number] }[] = [
+  { center: [20, -146], size: [180, 16] }, // landscaped spine + Olympus Plaza, North Campus
+  { center: [-130, -148], size: [26, 140] }, // tree-lined west edge of the North Campus
+  { center: [-24, 95], size: [80, 5.5] }, // lawn behind the Wing 18 / 19 row
+  { center: [-24, 141], size: [64, 30] }, // central courtyard, South Campus
+];
+// Verges either side of the campus drive leading in from the south gate.
+const DRIVE_VERGES: { center: [number, number]; size: [number, number] }[] = [
+  { center: [-44.5, -28], size: [2.5, 36] },
+  { center: [-31.5, -28], size: [2.5, 36] },
+];
 
 // The south campus entrance gate — master plan spot **01**, the "gate to south campus"
 // photo. On the plan it is drawn as an ENTRY and an EXIT gate side by side, separated
@@ -180,7 +207,11 @@ export function CampusScene({ mode, onSelectWing, highlightedWingId, sun }: Camp
             turbidity={sun && sun.altitude < 15 ? 8 : 4}
             rayleigh={sun && sun.altitude < 15 ? 2.5 : 1.5}
           />
-          <hemisphereLight intensity={sun ? 0.25 + 0.35 * THREE.MathUtils.clamp(sun.altitude / 30, 0, 1) : 0.6} groundColor="#4f8f52" />
+          {/* the floor is now a neutral grey, so the bounce light off it is neutral too */}
+          <hemisphereLight
+            intensity={sun ? 0.25 + 0.35 * THREE.MathUtils.clamp(sun.altitude / 30, 0, 1) : 0.6}
+            groundColor="#b9bab6"
+          />
           {sun ? (
             <Sunlight sun={sun} />
           ) : (
@@ -200,12 +231,20 @@ export function CampusScene({ mode, onSelectWing, highlightedWingId, sun }: Camp
       {/* surrounding land */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[40, 0, 0]} receiveShadow>
         <planeGeometry args={[700, 600]} />
-        <meshStandardMaterial color={mode === "day" ? "#d8d2c0" : "#11131f"} roughness={1} />
+        <meshStandardMaterial color={mode === "day" ? FLOOR_OUT_DAY : FLOOR_OUT_NIGHT} roughness={1} />
       </mesh>
 
-      {/* campus plots */}
+      {/* campus plots — the floor the wings stand on */}
       {[NORTH_PLOT, SOUTH_PLOT_WEST, SOUTH_PLOT_EAST].map((plot, i) => (
-        <Ground key={i} center={plot.center} size={plot.size} y={0.03} color={mode === "day" ? "#9fbf7a" : "#16201a"} />
+        <Ground key={i} center={plot.center} size={plot.size} y={0.03} color={mode === "day" ? FLOOR_DAY : FLOOR_NIGHT} />
+      ))}
+
+      {/* grass cover laid on the floor — the only green on the ground plane */}
+      {GRASS_AREAS.map((area, i) => (
+        <Ground key={`grass-${i}`} center={area.center} size={area.size} y={0.04} color={mode === "day" ? GRASS : GRASS_NIGHT} />
+      ))}
+      {DRIVE_VERGES.map((verge, i) => (
+        <Ground key={`verge-${i}`} center={verge.center} size={verge.size} y={0.04} color={mode === "day" ? GRASS : GRASS_NIGHT} />
       ))}
 
       {/* 18 m CDP road between the North Campus and the South Campus / lake, and along the west edge */}
