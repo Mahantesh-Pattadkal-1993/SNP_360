@@ -34,12 +34,6 @@ export default function HomePage() {
             >
               Start the 3D Walkthrough
             </Link>
-            <Link
-              href="/enquire"
-              className="rounded-full border border-white/60 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-            >
-              Enquire Now
-            </Link>
           </div>
         </div>
       </section>
@@ -109,6 +103,17 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <footer className="border-t border-black/5 py-6 text-center text-sm text-stone-500">
+        <p>
+          This is a hobby project, non-commercial, and independently maintained by Mahantesh Pattadkal.
+          For questions or feedback, reach out at{" "}
+          <a href="mailto:mpattadkal@gmail.com" className="text-emerald-700 underline-offset-2 hover:underline">
+            mpattadkal@gmail.com
+          </a>
+          .
+        </p>
+      </footer>
     </div>
   );
 }

@@ -6,7 +6,6 @@ const navLinks = [
   { href: "/master-plan", label: "Master Plan" },
   { href: "/wings", label: "Wings" },
   { href: "/amenities", label: "Amenities" },
-  { href: "/enquire", label: "Enquire Now" },
 ];
 
 export function SiteHeader() {
@@ -25,12 +24,6 @@ export function SiteHeader() {
         </nav>
         <div className="flex items-center gap-3">
           <DayNightToggle />
-          <Link
-            href="/enquire"
-            className="hidden rounded-full bg-emerald-700 px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 sm:inline-block"
-          >
-            Enquire Now
-          </Link>
         </div>
       </div>
       <nav className="flex items-center gap-5 overflow-x-auto border-t border-black/5 px-4 py-2 text-sm font-medium md:hidden">
