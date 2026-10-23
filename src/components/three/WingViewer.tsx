@@ -8,6 +8,7 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { Wing } from "@/data/wings";
 import type { FlatRef } from "@/data/flats";
 import { Building } from "./Building";
+import { Wing17Model, wing17FlatPlacement, type FlatPlacement } from "./Wing17Model";
 import { Wing18Model, wing18FlatPlacement } from "./Wing18Model";
 import { FLOOR_OUT_DAY, FLOOR_OUT_NIGHT } from "./palette";
 
@@ -60,7 +61,12 @@ export function WingViewer({ wing, mode, flat, flyToken = 0, className }: WingVi
     target: new THREE.Vector3(x, height * 0.5, z),
   };
 
-  const placement = flat && wing.detailedModel ? wing18FlatPlacement(flat.floor, flat.series.tower, flat.series.face) : undefined;
+  const isWing16or17 = wing.number === 16 || wing.number === 17;
+  const placement: FlatPlacement | undefined = flat && wing.detailedModel
+    ? (isWing16or17
+        ? wing17FlatPlacement(flat.floor, flat.series.series, wing.number)
+        : wing18FlatPlacement(flat.floor, flat.series.tower, flat.series.face) as FlatPlacement)
+    : undefined;
 
   const [goal, setGoal] = useState<CameraGoal | null>(null);
   useEffect(() => {
@@ -71,9 +77,15 @@ export function WingViewer({ wing, mode, flat, flyToken = 0, className }: WingVi
     }
     // stand ~14 m out from the flat's facade, slightly off-axis, at its floor level
     const [cx, cy, cz] = placement.center;
-    const target = new THREE.Vector3(x + cx, cy, z + cz);
-    setGoal({ target, position: new THREE.Vector3(x + cx * 1.4, cy + 1.2, z + cz + placement.normal * 14) });
-    // overview/placement derive from props already in the deps
+    if (placement.axis === "x") {
+      // end-block flat: approach along x from the outside
+      const outward = cx < 0 ? 1 : -1;
+      const target = new THREE.Vector3(x + cx, cy, z + cz);
+      setGoal({ target, position: new THREE.Vector3(x + cx + outward * 14, cy + 1.2, z + cz + 5) });
+    } else {
+      const target = new THREE.Vector3(x + cx, cy, z + cz);
+      setGoal({ target, position: new THREE.Vector3(x + cx * 1.4, cy + 1.2, z + cz + placement.normal * 14) });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flyToken]);
 
@@ -105,7 +117,9 @@ export function WingViewer({ wing, mode, flat, flyToken = 0, className }: WingVi
             <planeGeometry args={[160, 160]} />
             <meshStandardMaterial color={mode === "day" ? FLOOR_OUT_DAY : FLOOR_OUT_NIGHT} roughness={1} />
           </mesh>
-          {wing.detailedModel ? (
+          {wing.detailedModel && (wing.number === 16 || wing.number === 17) ? (
+            <Wing17Model wing={wing} mode={mode} highlightFlat={flat && placement ? { code: flat.code, placement } : undefined} />
+          ) : wing.detailedModel ? (
             <Wing18Model wing={wing} mode={mode} highlightFlat={flat && placement ? { code: flat.code, placement } : undefined} />
           ) : (
             <Building wing={wing} mode={mode} />

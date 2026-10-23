@@ -7,6 +7,7 @@ import { wings, CDP_ROAD, PLAN_SCALE, type Wing } from "@/data/wings";
 import type { SunPosition } from "@/data/sun";
 import { Building, CourtyardLawn, Pool } from "./Building";
 import { Walkway } from "./Walkway";
+import { Wing17Model } from "./Wing17Model";
 import { Wing18Model } from "./Wing18Model";
 import { SeatingArea, WalkingTrack, BasketballCourt } from "./Amenities";
 import { SouthCampusGate } from "./CampusGate";
@@ -273,7 +274,16 @@ export function CampusScene({ mode, onSelectWing, highlightedWingId, sun }: Camp
       ))}
 
       {wings.map((wing) => (
-        wing.detailedModel ? (
+        wing.detailedModel && (wing.number === 16 || wing.number === 17) ? (
+          <Wing17Model
+            key={wing.id}
+            wing={wing}
+            mode={mode}
+            showLabel
+            highlighted={wing.id === highlightedWingId}
+            onSelect={onSelectWing}
+          />
+        ) : wing.detailedModel ? (
           <Wing18Model
             key={wing.id}
             wing={wing}

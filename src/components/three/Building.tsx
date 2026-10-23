@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { Html } from "@react-three/drei";
 import { WING_WIDTH, WING_DEPTH, type Wing } from "@/data/wings";
 import { GRASS } from "./palette";
+import { Wing18EntranceBay } from "./Wing18Portal";
 
 interface BuildingProps {
   wing: Wing;
@@ -184,48 +185,73 @@ export function Building({ wing, mode, highlighted, onSelect }: BuildingProps) {
 
   // Wings in an attached pair (16/17) share the Wing-18 twin-tower footprint: 32 m wide, 20 m deep.
   const paired = wing.number === 16 || wing.number === 17;
+  // The paired block is scaled non-uniformly ([2, 1, 0.588]), so anything placed
+  // inside that group would be stretched. The entrance is therefore a sibling of
+  // the scaled mass, in real metres, and is sized to the SCALED block: 32 m wide,
+  // 20 m deep, with the tower slot 6 m across and the front face at z = 10.
+  const PAIRED_FRONT = 10;
+  const PAIRED_CORE_FRONT = 7;
+  const PAIRED_SLOT = 6;
+
   return (
     <group
       position={[x, 0, z]}
       rotation={[0, wing.rotation, 0]}
-      scale={paired ? [32 / WING_WIDTH, 1, 20 / WING_DEPTH] : 1}
       onClick={(e) => {
         e.stopPropagation();
         onSelect?.(wing);
       }}
     >
-      {/* twin towers with balconies wrapping the front and outer side faces */}
-      {bayOffsets.map(([bayX, outerSide]) => (
-        <group key={bayX}>
-          <mesh position={[bayX, height / 2, 0]} castShadow receiveShadow>
-            <boxGeometry args={[bayWidth, height, WING_DEPTH]} />
-            <meshStandardMaterial color={facadeColor} roughness={0.85} />
-          </mesh>
-          <group position={[bayX, 0, 0]}>
-            {Array.from({ length: wing.floors - GROUND_FLOORS_NO_BALCONY }, (_, i) => i + GROUND_FLOORS_NO_BALCONY).map(
-              (floor) => (
-                <group key={floor}>
-                  <Balcony floor={floor} bayWidth={bayWidth} mode={mode} face="front" />
-                  <Balcony floor={floor} bayWidth={bayWidth} mode={mode} face={outerSide} />
-                </group>
-              ),
-            )}
+      <group scale={paired ? [32 / WING_WIDTH, 1, 20 / WING_DEPTH] : 1}>
+        {/* twin towers with balconies wrapping the front and outer side faces */}
+        {bayOffsets.map(([bayX, outerSide]) => (
+          <group key={bayX}>
+            <mesh position={[bayX, height / 2, 0]} castShadow receiveShadow>
+              <boxGeometry args={[bayWidth, height, WING_DEPTH]} />
+              <meshStandardMaterial color={facadeColor} roughness={0.85} />
+            </mesh>
+            <group position={[bayX, 0, 0]}>
+              {Array.from({ length: wing.floors - GROUND_FLOORS_NO_BALCONY }, (_, i) => i + GROUND_FLOORS_NO_BALCONY).map(
+                (floor) => (
+                  <group key={floor}>
+                    <Balcony floor={floor} bayWidth={bayWidth} mode={mode} face="front" />
+                    <Balcony floor={floor} bayWidth={bayWidth} mode={mode} face={outerSide} />
+                  </group>
+                ),
+              )}
+            </group>
+            <Pediment bayWidth={bayWidth} bayX={bayX} height={height} />
           </group>
-          <Pediment bayWidth={bayWidth} bayX={bayX} height={height} />
-        </group>
-      ))}
+        ))}
 
-      <Entrance wing={wing} mode={mode} />
+        <Html position={[0, height + 5, 0]} center distanceFactor={60} occlude>
+          <span
+            className={`whitespace-nowrap rounded px-2 py-0.5 text-xs font-semibold ${
+              mode === "night" ? "bg-black/60 text-white" : "bg-white/80 text-stone-900"
+            }`}
+          >
+            {wing.name}
+          </span>
+        </Html>
+      </group>
 
-      <Html position={[0, height + 5, 0]} center distanceFactor={60} occlude>
-        <span
-          className={`whitespace-nowrap rounded px-2 py-0.5 text-xs font-semibold ${
-            mode === "night" ? "bg-black/60 text-white" : "bg-white/80 text-stone-900"
-          }`}
-        >
-          {wing.name}
-        </span>
-      </Html>
+      {paired ? (
+        /* The Wing-16/17 pair gets the same arched entrance as the Wing-18 model:
+           a recessed arch with a slatted vault, rosette, glazed double door,
+           corbelled entablature carrying the wing number, lanterns and topiary. */
+        <Wing18EntranceBay
+          wing={wing}
+          mode={mode}
+          front={PAIRED_FRONT}
+          coreFront={PAIRED_CORE_FRONT}
+          slotWidth={PAIRED_SLOT}
+          buildingHeight={height}
+          coreColor={facadeColor}
+          lawnWidth={30}
+        />
+      ) : (
+        <Entrance wing={wing} mode={mode} />
+      )}
     </group>
   );
 }

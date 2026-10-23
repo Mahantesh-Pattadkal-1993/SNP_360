@@ -74,13 +74,15 @@ const northWings: RawWing[] = [
 // South Campus — south of the CDP road, laid out from `SNP South Campus.png`:
 // Wings 12-15 west column; Wing-19 + Wing-18 are one attached row on the north side of the
 // central courtyard (amenity 06); Wing-16 + Wing-17 are the attached row directly opposite on
-// the south side. Each pair shares a party wall (WING18_SPAN = full width of the Wing-18 model).
+// the south side. Each pair shares a party wall.
 // Row z values are anchored to the full-site plan; x spacing follows the South Campus sheet.
 export const WING18_SPAN = 32; // twin-tower width of the detailed Wing-18 model (side walls at x = ±16)
+export const PAIR_SPAN_1617 = 40; // full width of the 16/17 pair (context §9.10: 4.0 + 3×10.0 + 2×1.5 + 3.0 = 40.0 m)
 const SOUTH_ROW_X = plan(320, 0)[0]; // centre between the pairs
 const NORTH_ROW_Z = plan(0, 580)[1];
 const SOUTH_ROW_Z = plan(0, 690)[1];
-const pairX = (k: -1 | 1) => SOUTH_ROW_X + (k * WING18_SPAN) / 2;
+const pairX18 = (k: -1 | 1) => SOUTH_ROW_X + (k * WING18_SPAN) / 2;
+const pairX1617 = (k: -1 | 1) => SOUTH_ROW_X + (k * PAIR_SPAN_1617) / 2;
 
 const southWings: RawWing[] = [
   { number: 12, cluster: "West column", position: plan(205, 480) },
@@ -90,31 +92,37 @@ const southWings: RawWing[] = [
   {
     number: 19,
     cluster: "North row, attached to Wing-18, facing the central courtyard",
-    position: [pairX(-1), NORTH_ROW_Z],
+    position: [pairX18(-1), NORTH_ROW_Z],
     floors: WING18_FLOORS,
     detailedModel: true,
   },
   {
     number: 18,
     cluster: "North row, attached to Wing-19, facing the central courtyard",
-    position: [pairX(1), NORTH_ROW_Z],
+    position: [pairX18(1), NORTH_ROW_Z],
     connectors: [{ wingNumber: 17, via: "Walkway across the central courtyard" }],
     floors: WING18_FLOORS,
     detailedModel: true,
   },
-  // The sheet draws 16/17 with the same twin-tower footprint as 18/19; only 18/19 have photos, so
-  // these use the generic block at the same width, rotated so their entrances face the courtyard.
+  // The sheet draws 16/17 with the same twin-tower footprint as 18/19.
+  // Wing 17 is modelled from photos (Wing-17.png front, Wing-17-top.png back);
+  // Wing 16 is its exact mirror. Both towers are gabled (unlike 18/19).
+  // Wing 16 (west) at x = -40, Wing 17 (east) at x = -8, party wall at x = -24.
   {
     number: 16,
     cluster: "South row, attached to Wing-17, opposite Wing-19 across the courtyard",
-    position: [pairX(-1), SOUTH_ROW_Z],
+    position: [pairX1617(-1), SOUTH_ROW_Z],
+    floors: FLOORS,
+    detailedModel: true,
     rotation: Math.PI,
   },
   {
     number: 17,
     cluster: "South row, attached to Wing-16, opposite Wing-18 across the courtyard",
-    position: [pairX(1), SOUTH_ROW_Z],
+    position: [pairX1617(1), SOUTH_ROW_Z],
     connectors: [{ wingNumber: 18, via: "Walkway across the central courtyard" }],
+    floors: FLOORS,
+    detailedModel: true,
     rotation: Math.PI,
   },
 ];

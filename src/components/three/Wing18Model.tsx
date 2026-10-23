@@ -6,6 +6,8 @@ import { Html } from "@react-three/drei";
 import type { Wing } from "@/data/wings";
 import { seriesFor } from "@/data/flats";
 import { GRASS } from "./palette";
+import { canvasTexture } from "./textures";
+import { Box, Plane, Rosette, Wing18Portal } from "./Wing18Portal";
 
 type Mode = "day" | "night";
 
@@ -50,11 +52,6 @@ const OUTER_BAL_X = SIDE_X - 0.4 - OUTER_BAL_W / 2;
 const OUTER_BAL_DEPTH = 1.2; // how far the outer balconies project from the facade
 const OUTER_BAL_RAIL_H = 1.05;
 const OUTER_BAL_FLOOR = 0.43; // balcony floor level = window sill level
-const PORTAL_HALF = 3.6;
-const ARCH_R = 2.3;
-const SPRING = 4.4;
-const PORTAL_TOP = 7.4;
-const PORTAL_FLOOR = 0.6;
 const RAIL_H = 1.05;
 const SIDES = [-1, 1] as const;
 const CORNICE_FLOORS = [3, 8, 13];
@@ -75,22 +72,6 @@ const PEDIMENT_DENTILS = 16; // small blocks along the cornice under the gable
 const pedimentSide = (wingNumber: number): -1 | 1 => seriesFor(wingNumber)[3].tower;
 
 // ---------- canvas textures (no network fonts/assets needed) ----------
-
-const textureCache = new Map<string, THREE.CanvasTexture>();
-
-function canvasTexture(key: string, width: number, height: number, draw: (ctx: CanvasRenderingContext2D) => void) {
-  const cached = textureCache.get(key);
-  if (cached) return cached;
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  draw(canvas.getContext("2d")!);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 4;
-  textureCache.set(key, texture);
-  return texture;
-}
 
 const railingMaterials = new Map<number, THREE.MeshStandardMaterial>();
 
@@ -252,45 +233,6 @@ function archMouldingShape(innerHalf: number, spring: number, thickness: number)
 
 // ---------- primitives ----------
 
-type Vec3 = [number, number, number];
-
-function Box({
-  args,
-  position,
-  material,
-  rotation,
-  shadow = true,
-}: {
-  args: Vec3;
-  position: Vec3;
-  material: THREE.Material;
-  rotation?: Vec3;
-  shadow?: boolean;
-}) {
-  return (
-    <mesh position={position} rotation={rotation} material={material} castShadow={shadow} receiveShadow>
-      <boxGeometry args={args} />
-    </mesh>
-  );
-}
-
-function Plane({
-  args,
-  position,
-  material,
-  rotation,
-}: {
-  args: [number, number];
-  position: Vec3;
-  material: THREE.Material;
-  rotation?: Vec3;
-}) {
-  return (
-    <mesh position={position} rotation={rotation} material={material}>
-      <planeGeometry args={args} />
-    </mesh>
-  );
-}
 
 // ---------- materials ----------
 
@@ -371,37 +313,6 @@ function useMaterials(mode: Mode, highlighted: boolean, floors: number): Materia
 
 // ---------- parts ----------
 
-function Rosette({ position, size }: { position: Vec3; size: number }) {
-  const material = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        map: canvasTexture("rosette", 256, 256, (ctx) => {
-          ctx.strokeStyle = "#8a7a5e";
-          ctx.lineWidth = 12;
-          ctx.beginPath();
-          ctx.arc(128, 128, 110, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.lineWidth = 7;
-          for (let i = 0; i < 8; i++) {
-            ctx.save();
-            ctx.translate(128, 128);
-            ctx.rotate((i * Math.PI) / 4);
-            ctx.beginPath();
-            ctx.ellipse(0, -52, 20, 44, 0, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
-          }
-          ctx.beginPath();
-          ctx.arc(128, 128, 18, 0, Math.PI * 2);
-          ctx.stroke();
-        }),
-        transparent: true,
-        alphaTest: 0.3,
-      }),
-    [],
-  );
-  return <Plane args={[size, size]} position={position} material={material} />;
-}
 
 /**
  * Arched window column beside the core (Buidings.webp): stacked mullioned windows with white frames
@@ -662,139 +573,14 @@ function Roof({
   );
 }
 
-/** The arched entrance portal from building entrance.jpg. */
-function Portal({ wing, mode, m }: { wing: Wing; mode: Mode; m: Materials }) {
-  const night = mode === "night";
-  const front = useMemo(() => {
-    const s = new THREE.Shape();
-    s.moveTo(-PORTAL_HALF, 0);
-    s.lineTo(-PORTAL_HALF, PORTAL_TOP);
-    s.lineTo(PORTAL_HALF, PORTAL_TOP);
-    s.lineTo(PORTAL_HALF, 0);
-    s.lineTo(ARCH_R, 0);
-    s.lineTo(ARCH_R, SPRING);
-    s.absarc(0, SPRING, ARCH_R, 0, Math.PI, false);
-    s.lineTo(-ARCH_R, 0);
-    s.closePath();
-    return new THREE.ExtrudeGeometry(s, { depth: 1.2, bevelEnabled: false });
-  }, []);
-  const vault = useMemo(() => {
-    const s = new THREE.Shape();
-    s.moveTo(ARCH_R + 0.25, SPRING);
-    s.absarc(0, SPRING, ARCH_R + 0.25, 0, Math.PI, false);
-    s.lineTo(-ARCH_R, SPRING);
-    s.absarc(0, SPRING, ARCH_R, Math.PI, 0, true);
-    s.closePath();
-    return new THREE.ExtrudeGeometry(s, { depth: FRONT + 0.8 - CORE_FRONT, bevelEnabled: false });
-  }, []);
-  const numberMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        map: canvasTexture(`num-${wing.number}`, 256, 128, (ctx) => {
-          ctx.fillStyle = "#4a3f30";
-          ctx.font = "bold 92px Georgia, 'Times New Roman', serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(String(wing.number), 128, 68);
-        }),
-        transparent: true,
-        alphaTest: 0.3,
-      }),
-    [wing.number],
-  );
-  const vaultDepth = FRONT + 0.8 - CORE_FRONT;
-  const doorY = PORTAL_FLOOR + 1.7;
-
-  return (
-    <group>
-      {/* arched front wall with pilasters */}
-      <mesh position={[0, 0, FRONT + 0.8]} geometry={front} material={m.trim} castShadow receiveShadow />
-      {[-1, 1].map((s) => (
-        <group key={s}>
-          <Box args={[1.5, 0.35, 1.5]} position={[s * (ARCH_R + 0.65), SPRING, FRONT + 1.4]} material={m.trim} />
-          <Box args={[1.5, 0.5, 1.5]} position={[s * (ARCH_R + 0.65), 0.25, FRONT + 1.4]} material={m.plinth} />
-          <Box args={[0.25, SPRING, vaultDepth]} position={[s * (ARCH_R + 0.12), SPRING / 2, CORE_FRONT + vaultDepth / 2]} material={m.trim} />
-        </group>
-      ))}
-
-      {/* entablature with corbels and the wing number */}
-      <Box args={[PORTAL_HALF * 2 + 0.6, 1.4, 1.6]} position={[0, PORTAL_TOP + 0.7, FRONT + 1.3]} material={m.trim} />
-      <Box args={[PORTAL_HALF * 2 + 1.2, 0.3, 1.9]} position={[0, PORTAL_TOP + 1.55, FRONT + 1.35]} material={m.trim} />
-      {Array.from({ length: 5 }, (_, i) => (
-        <Box key={i} args={[0.28, 0.5, 0.3]} position={[(i - 2) * 1.2, PORTAL_TOP + 0.3, FRONT + 2.2]} material={m.trim} shadow={false} />
-      ))}
-      <Plane args={[1.3, 0.65]} position={[0, PORTAL_TOP + 0.95, FRONT + 2.11]} material={numberMaterial} />
-
-      {/* vault with radial timber slats */}
-      <mesh position={[0, 0, CORE_FRONT]} geometry={vault} material={m.trimDouble} />
-      {Array.from({ length: 8 }, (_, i) => {
-        const a = (Math.PI * (i + 1)) / 9;
-        const r = ARCH_R - 0.18;
-        return (
-          <Box
-            key={i}
-            args={[0.12, 0.35, vaultDepth - 0.6]}
-            position={[Math.cos(a) * r, SPRING + Math.sin(a) * r, CORE_FRONT + vaultDepth / 2 + 0.2]}
-            rotation={[0, 0, a - Math.PI / 2]}
-            material={m.wood}
-            shadow={false}
-          />
-        );
-      })}
-
-      {/* raised floor and steps */}
-      <Box args={[ARCH_R * 2, PORTAL_FLOOR, vaultDepth + 1.2]} position={[0, PORTAL_FLOOR / 2, CORE_FRONT + (vaultDepth + 1.2) / 2]} material={m.paving} />
-      <Box args={[5, 0.4, 0.45]} position={[0, 0.2, FRONT + 2.25]} material={m.paving} />
-      <Box args={[5.6, 0.2, 0.45]} position={[0, 0.1, FRONT + 2.7]} material={m.paving} />
-
-      {/* rosette and glazed double door on the recessed back wall */}
-      <Rosette position={[0, 5.15, CORE_FRONT + 0.05]} size={1.5} />
-      <Box args={[2.7, 3.5, 0.12]} position={[0, doorY, CORE_FRONT + 0.06]} material={m.metal} shadow={false} />
-      <Plane args={[2.4, 3.2]} position={[0, doorY, CORE_FRONT + 0.13]} material={m.doorGlass} />
-      {[-0.6, 0, 0.6].map((dx) => (
-        <Box key={dx} args={[0.05, 3.2, 0.05]} position={[dx, doorY, CORE_FRONT + 0.16]} material={m.metal} shadow={false} />
-      ))}
-      {[0, 1, 2, 3].map((k) => (
-        <Box key={k} args={[2.4, 0.05, 0.05]} position={[0, PORTAL_FLOOR + 0.5 + k * 0.8, CORE_FRONT + 0.16]} material={m.metal} shadow={false} />
-      ))}
-
-      {/* lanterns and gold topiary beside the door */}
-      {[-1, 1].map((s) => (
-        <group key={s}>
-          <mesh position={[s * 1.75, PORTAL_FLOOR + 0.7, CORE_FRONT + 1]} material={m.metal}>
-            <cylinderGeometry args={[0.05, 0.05, 1.4, 8]} />
-          </mesh>
-          <mesh position={[s * 1.75, PORTAL_FLOOR + 1.55, CORE_FRONT + 1]} material={m.lantern}>
-            <cylinderGeometry args={[0.12, 0.09, 0.35, 8]} />
-          </mesh>
-          <mesh position={[s * 1.25, PORTAL_FLOOR + 0.22, CORE_FRONT + 1.3]} material={m.whitePot}>
-            <cylinderGeometry args={[0.2, 0.16, 0.45, 12]} />
-          </mesh>
-          <mesh position={[s * 1.25, PORTAL_FLOOR + 0.8, CORE_FRONT + 1.3]} material={m.topiary} castShadow>
-            <sphereGeometry args={[0.38, 16, 12]} />
-          </mesh>
-          {/* potted palms at the foot of the steps */}
-          <mesh position={[s * 3.3, 0.3, FRONT + 3.3]} material={m.clayPot}>
-            <cylinderGeometry args={[0.25, 0.2, 0.6, 12]} />
-          </mesh>
-          <mesh position={[s * 3.3, 1.3, FRONT + 3.3]} material={m.foliage} castShadow>
-            <coneGeometry args={[0.6, 1.4, 8]} />
-          </mesh>
-          {night && <pointLight position={[s * 1.75, PORTAL_FLOOR + 1.55, CORE_FRONT + 1.2]} intensity={4} distance={6} color="#ffb04d" />}
-        </group>
-      ))}
-      {night && <pointLight position={[0, 3.2, CORE_FRONT + 1.8]} intensity={18} distance={10} color="#ffc070" />}
-      {night && <pointLight position={[0, 1.2, FRONT + 6]} intensity={40} distance={16} decay={1.3} color="#ffc27a" />}
-
-      {/* entrance walkway through a lawn, as in the photo */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, FRONT + 11]} material={m.paving} receiveShadow>
-        <planeGeometry args={[3, 16]} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, FRONT + 9]} material={m.lawn} receiveShadow>
-        <planeGeometry args={[34, 14]} />
-      </mesh>
-    </group>
-  );
+/**
+ * The arched entrance portal from building entrance.jpg.
+ *
+ * The geometry lives in `Wing18Portal.tsx` so the Wing-18 model and the Wing-16/17
+ * twin pair share one implementation of the entrance design.
+ */
+function Portal({ wing, mode }: { wing: Wing; mode: Mode }) {
+  return <Wing18Portal wing={wing} mode={mode} front={FRONT} coreFront={CORE_FRONT} />;
 }
 
 /** Where a flat sits on the Wing-18 model (model-local coords): its facade centre and outward normal. */
@@ -916,7 +702,7 @@ export function Wing18Model({ wing, mode, highlighted = false, showLabel = false
         ),
       )}
 
-      <Portal wing={wing} mode={mode} m={m} />
+      <Portal wing={wing} mode={mode} />
       {highlightFlat && <FlatHighlight code={highlightFlat.code} placement={highlightFlat.placement} />}
 
       {showLabel && (
